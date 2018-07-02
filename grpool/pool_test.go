@@ -2,11 +2,14 @@ package grpool
 
 import (
 	"fmt"
+	"runtime"
 	"testing"
 	"time"
 )
 
 func Test_pool(t *testing.T) {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	fmt.Println("CPU Num: ", runtime.NumCPU())
 	pool := NewPool(100, 20)
 	defer pool.Release()
 
