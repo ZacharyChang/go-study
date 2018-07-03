@@ -1,7 +1,6 @@
 package main
 
 import (
-	// "log"
 	"net/http"
 	"os"
 
@@ -12,11 +11,11 @@ import (
 func main() {
 	logger := log.NewLogfmtLogger(os.Stderr)
 
-	svc := stringService{}
+	var svc StringService
+	svc = stringService{}
+	svc = loggingMiddleware{logger, svc}
 
 	uppercase := makeUppercaseEndpoint(svc)
-	// decorator middleware
-	uppercase = loggingMiddleware(log.With(logger, "method", "uppercase"))(uppercase)
 	uppercaseHandler := httptransport.NewServer(
 		uppercase,
 		decodeUppercaseRequest,
@@ -24,7 +23,6 @@ func main() {
 	)
 
 	count := makeCountEndpoint(svc)
-	count = loggingMiddleware(log.With(logger, "method", "count"))(count)
 	countHandler := httptransport.NewServer(
 		count,
 		decodeCountRequest,
