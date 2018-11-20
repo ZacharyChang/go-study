@@ -1,8 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"os"
 )
@@ -23,7 +24,7 @@ func main() {
 	_, err = conn.Write([]byte("HEAD / HTTP/1.0\r\n\r\n"))
 	checkErr(err)
 
-	result, err := ioutil.ReadAll(conn)
+	result, err := readFully(conn)
 	checkErr(err)
 
 	fmt.Println(string(result))
@@ -35,4 +36,22 @@ func checkErr(err error) {
 		fmt.Fprintf(os.Stderr, "Fatal error: %s", err.Error())
 		os.Exit(1)
 	}
+}
+
+func readFully(conn net.Conn) ([]byte, error) {
+	defer conn.Close()
+
+	res := bytes.NewBuffer(nil)
+	var buf [512]byte
+	for {
+		n, err := conn.Read(buf[0:])
+		res.Write(buf[0:n])
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+	}
+	return res.Bytes(), nil
 }
