@@ -23,10 +23,9 @@ func main() {
 	fmt.Println("Public key modulus", publicKey.N.String())
 	fmt.Println("Public key exponent", publicKey.E)
 
-	saveGobKey("private.key", key)
-	saveGobKey("publick.key", publicKey)
-
-	savePemKey("private.pem", key)
+	saveGobKey("key/private.key", key)
+	saveGobKey("key/public.key", publicKey)
+	savePemKey("key/private.pem", key)
 }
 
 func savePemKey(filename string, key *rsa.PrivateKey) {
