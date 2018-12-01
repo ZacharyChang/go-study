@@ -45,7 +45,7 @@ func main() {
 	_, _ = certCerFile.Write(derBytes)
 	certCerFile.Close()
 
-	certPemFile, err := os.Create("cert/jsn.newmarch.name.pem")
+	certPemFile, err := os.Create("cert/jan.newmarch.name.pem")
 	checkErr(err)
 	_ = pem.Encode(certPemFile, &pem.Block{
 		Type:  "CERTIFICATE",
