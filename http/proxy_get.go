@@ -9,21 +9,35 @@ import (
 )
 
 func main() {
-	if len(os.Args) != 3 {
-		fmt.Println("Usage", os.Args[0], "http://proxy-host:proxy-port", " http://host:port")
+	if len(os.Args) != 2 && len(os.Args) != 3 {
+		fmt.Println("Usage", os.Args[0], "http://host:port", "http://proxy-host:proxy-port[optional]")
 		os.Exit(1)
 	}
-	proxyStr := os.Args[1]
-	proxyUrl, err := url.Parse(proxyStr)
+
+	targetUrlStr := os.Args[1]
+	targetUrl, err := url.Parse(targetUrlStr)
 	checkErr(err, 2)
 
-	targetUrlStr := os.Args[2]
-	targetUrl, err := url.Parse(targetUrlStr)
-	checkErr(err, 3)
+	var proxyUrl *url.URL
+	var transport *http.Transport
 
-	transport := &http.Transport{
-		Proxy: http.ProxyURL(proxyUrl),
+	if len(os.Args) == 3 {
+		// get proxy url from input args
+		proxyStr := os.Args[2]
+		fmt.Println("Using proxy:", proxyStr)
+		proxyUrl, err = url.Parse(proxyStr)
+		checkErr(err, 3)
+		transport = &http.Transport{
+			Proxy: http.ProxyURL(proxyUrl),
+		}
+	} else {
+		// get proxy from environment
+		fmt.Println("Using environment proxy")
+		transport = &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+		}
 	}
+
 	client := &http.Client{
 		Transport: transport,
 	}
