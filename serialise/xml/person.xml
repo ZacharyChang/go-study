@@ -1,0 +1,13 @@
+<person>
+    <name>
+        <family> Newmarch </family>
+        <personal> Jan </personal>
+    </name>
+    <email type="personal">
+        jan@newmarch.name
+    </email>
+    <!-- This is the comment -->
+    <email type="work">
+        j.newmarch@boxhill.edu.au
+    </email>
+</person>
