@@ -2,12 +2,14 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"net/rpc"
+	"os"
 
-	"github.com/zacharychang/lintcode/example/rpc/common"
+	"github.com/zacharychang/go-study/rpc/common"
 )
 
 type Arith int
@@ -37,6 +39,9 @@ func main() {
 		log.Fatal("listen error", e)
 	}
 
-	http.Serve(l, nil)
-
+	err := http.Serve(l, nil)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
 }

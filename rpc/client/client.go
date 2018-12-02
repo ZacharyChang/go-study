@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/rpc"
 
-	"github.com/zacharychang/lintcode/example/rpc/common"
+	"github.com/zacharychang/go-study/rpc/common"
 )
 
 var (
