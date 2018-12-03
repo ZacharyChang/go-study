@@ -1,15 +1,10 @@
 package main
 
 import (
-	"errors"
-	"fmt"
-	"log"
+	"github.com/pkg/errors"
+	"github.com/zacharychang/go-study/rpc/tcp/common"
 	"net"
-	"net/http"
 	"net/rpc"
-	"os"
-
-	"github.com/zacharychang/go-study/rpc/common"
 )
 
 type Arith int
@@ -30,18 +25,20 @@ func (t *Arith) Divide(args *common.Args, quo *common.Quotient) error {
 
 func main() {
 	arith := new(Arith)
-	rpc.Register(arith)
-	rpc.HandleHTTP()
+	err := rpc.Register(arith)
+	common.CheckErr(err)
 
-	l, e := net.Listen("tcp", ":1234")
+	tcpAddr, err := net.ResolveTCPAddr("tcp", "localhost:1200")
+	common.CheckErr(err)
 
-	if e != nil {
-		log.Fatal("listen error", e)
-	}
+	listener, err := net.ListenTCP("tcp", tcpAddr)
+	common.CheckErr(err)
 
-	err := http.Serve(l, nil)
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			continue
+		}
+		rpc.ServeConn(conn)
 	}
 }
