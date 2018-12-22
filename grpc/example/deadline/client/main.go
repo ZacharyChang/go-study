@@ -74,14 +74,4 @@ func main() {
 	unaryCall(c, 4, "[propagate][propagate]world", codes.DeadlineExceeded)
 	streamingCall(c, 5, "[propagate]world", codes.OK)
 	streamingCall(c, 6, "[propagate][propagate]world", codes.DeadlineExceeded)
-	//ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	//defer cancel()
-	//
-	//res, err := c.UnaryEcho(ctx, &pb.EchoRequest{
-	//	Message: *msg,
-	//}, grpc.UseCompressor(gzip.Name))
-	//log.Printf("UnaryEcho call returned %q, %v\n", res.GetMessage(), err)
-	//if err != nil {
-	//	log.Fatalf("Message=%q, err=%v; Want message: %q", res.GetMessage(), err, msg)
-	//}
 }
