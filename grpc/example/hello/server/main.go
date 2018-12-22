@@ -7,7 +7,7 @@ import (
 	"net"
 	"os"
 
-	"github.com/zacharychang/go-study/grpc/hello-example/pb"
+	"github.com/zacharychang/go-study/grpc/example/hello/pb"
 	"google.golang.org/grpc"
 )
 

@@ -7,7 +7,7 @@ import (
 
 	"flag"
 
-	pb "github.com/zacharychang/go-study/grpc/user-example/pb"
+	pb "github.com/zacharychang/go-study/grpc/example/user/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
