@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/rand"
 	"net"
+	"strconv"
 	"time"
 
 	"github.com/zacharychang/go-study/grpc/proto/echo"
@@ -87,8 +88,9 @@ func (s *server) ServerStreamingEcho(in *pb.EchoRequest, stream pb.Echo_ServerSt
 	for i := 0; i < streamingCount; i++ {
 		log.Printf("echo message: %v\n", in.Message)
 		err := stream.Send(&pb.EchoResponse{
-			Message: in.Message,
+			Message: strconv.Itoa(i) + " " + in.Message,
 		})
+		time.Sleep(1 * time.Second)
 		if err != nil {
 			return err
 		}
