@@ -131,6 +131,7 @@ func (s *server) ClientStreamingEcho(stream pb.Echo_ClientStreamingEchoServer) e
 				Message: message,
 			})
 		}
+		message = in.Message
 		log.Printf("request received: %v, building echo\n", in)
 		if err != nil {
 			return nil

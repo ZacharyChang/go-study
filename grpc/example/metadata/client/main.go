@@ -130,6 +130,69 @@ func serverStreamingWithMetadata(c pb.EchoClient, message string) {
 	}
 }
 
+func clientSteamingWithMetadata(c pb.EchoClient, message string) {
+	log.Printf("clientStreamingWithMetadata called")
+
+	// create the context
+	md := metadata.Pairs("timestamp", time.Now().Format(timestampFormat))
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+	// make rpc with the context created
+	stream, err := c.ClientStreamingEcho(ctx)
+	if err != nil {
+		log.Fatalf("failed to call ClientStreamingEcho: %v\n", err)
+	}
+	// read the header
+	header, err := stream.Header()
+	if err != nil {
+		log.Fatalf("failed to get header from stream: %v", err)
+	}
+	// read metadata from header
+	if t, ok := header["timestamp"]; ok {
+		log.Printf("timestamp from header:\n")
+		for i, v := range t {
+			log.Printf(" %d. %s\n", i, v)
+		}
+	} else {
+		log.Fatal("timestamp expected but not exist in header")
+	}
+	// read location from header
+	if l, ok := header["location"]; ok {
+		log.Printf("location from header:\n")
+		for i, v := range l {
+			log.Printf(" %d. %s\n", i, v)
+		}
+	} else {
+		log.Fatal("location expected but not exist in header")
+	}
+	// send requests to server by stream
+	for i := 0; i < streamingCount; i++ {
+		err := stream.Send(&pb.EchoRequest{
+			Message: message,
+		})
+		if err != nil {
+			log.Fatalf("failed to send streaming: %v\n", err)
+		}
+		time.Sleep(1 * time.Second)
+	}
+	// read the response
+	r, err := stream.CloseAndRecv()
+	if err != nil {
+		log.Fatalf("failed to call CloseAndRecv(): %v\n", err)
+	}
+	log.Printf("response:\n")
+	log.Printf(" - %s\n\n", r.Message)
+	// read trailer after RPC finished
+	trailer := stream.Trailer()
+	if t, ok := trailer["timestamp"]; ok {
+		log.Printf("timestamp from trailer:\n")
+		for i, v := range t {
+			log.Printf(" %d. %s\n", i, v)
+		}
+	} else {
+		log.Fatal("timestamp expected but not exist in trailer")
+	}
+}
+
 func main() {
 	flag.Parse()
 
@@ -141,11 +204,14 @@ func main() {
 
 	c := pb.NewEchoClient(conn)
 
-	log.Println("------------")
+	log.Println("=============")
 	unaryCallWithMetadata(c, *msg)
 	time.Sleep(1 * time.Second)
 
-	log.Println("------------")
+	log.Println("=============")
 	serverStreamingWithMetadata(c, *msg)
+	time.Sleep(1 * time.Second)
 
+	log.Println("=============")
+	clientSteamingWithMetadata(c, *msg)
 }
