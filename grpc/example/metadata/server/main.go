@@ -180,6 +180,7 @@ func (s *server) BidirectionalStreamingEcho(stream pb.Echo_BidirectionalStreamin
 		if err != nil {
 			return err
 		}
+		time.Sleep(2 * time.Second)
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 	"flag"
 	"io"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/zacharychang/go-study/grpc/proto/echo"
@@ -193,6 +194,83 @@ func clientSteamingWithMetadata(c pb.EchoClient, message string) {
 	}
 }
 
+func bidirectionalWithMetadata(c pb.EchoClient, message string) {
+	log.Printf("bidirectionalWithMetadata called")
+	// create metadata and context
+	md := metadata.Pairs("timestamp", time.Now().Format(timestampFormat))
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+	// make RPG call
+	stream, err := c.BidirectionalStreamingEcho(ctx)
+	if err != nil {
+		log.Fatalf("fail to call BidirectionalStreamingEcho: %v", err)
+	}
+
+	go func() {
+		// read the header
+		header, err := stream.Header()
+		if err != nil {
+			log.Fatalf("failed to get header from stream: %v", err)
+		}
+		// read metadata from header
+		if t, ok := header["timestamp"]; ok {
+			log.Printf("timestamp from header:\n")
+			for i, v := range t {
+				log.Printf(" %d. %s\n", i, v)
+			}
+		} else {
+			log.Fatal("timestamp expected but not exist in header")
+		}
+		// read location from header
+		if l, ok := header["location"]; ok {
+			log.Printf("location from header:\n")
+			for i, v := range l {
+				log.Printf(" %d. %s\n", i, v)
+			}
+		} else {
+			log.Fatal("location expected but not exist in header")
+		}
+		// send requests to server by stream
+		for i := 0; i < streamingCount; i++ {
+			err := stream.Send(&pb.EchoRequest{
+				Message: strconv.Itoa(i) + " " + message,
+			})
+			if err != nil {
+				log.Fatalf("failed to send streaming: %v\n", err)
+			}
+			time.Sleep(1 * time.Second)
+		}
+		// pay attention to close stream!
+		stream.CloseSend()
+	}()
+
+	// read the response
+	var rpcStatus error
+	for {
+		r, err := stream.Recv()
+		if err != nil {
+			rpcStatus = err
+			break
+		}
+		log.Printf(" - %s\n", r.Message)
+	}
+	if rpcStatus != io.EOF {
+		log.Fatalf("fail to finish server streaming: %v", rpcStatus)
+	}
+
+	//  read after RPC finished
+	trailer := stream.Trailer()
+	// read timestamp from trailer
+	if t, ok := trailer["timestamp"]; ok {
+		log.Printf("timestamp from tailer:\n")
+		for i, v := range t {
+			log.Printf(" %d. %s\n", i, v)
+		}
+	} else {
+		log.Fatalf("timestamp expected but not exist in trailer")
+	}
+}
+
 func main() {
 	flag.Parse()
 
@@ -214,4 +292,10 @@ func main() {
 
 	log.Println("=============")
 	clientSteamingWithMetadata(c, *msg)
+	time.Sleep(1 * time.Second)
+
+	log.Println("=============")
+	bidirectionalWithMetadata(c, *msg)
+	time.Sleep(1 * time.Second)
+
 }
