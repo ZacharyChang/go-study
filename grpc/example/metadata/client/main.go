@@ -36,35 +36,15 @@ func unaryCallWithMetadata(c pb.EchoClient, message string) {
 		log.Fatalf("fail to call UnaryEcho: %v", err)
 	}
 
-	if t, ok := header["timestamp"]; ok {
-		log.Printf("timestamp from header:\n")
-		for i, v := range t {
-			log.Printf(" %d. %s\n", i, v)
-		}
-	} else {
-		log.Fatalf("timestamp expected but not exist in header")
-	}
+	readTimestampFromHeader(header)
 
-	if l, ok := header["location"]; ok {
-		log.Printf("location from header:\n")
-		for i, v := range l {
-			log.Printf(" %d. %s\n", i, v)
-		}
-	} else {
-		log.Fatalf("location expected but not exist in header")
-	}
+	readLocationFromHeader(header)
 
 	log.Println("response:")
 	log.Printf(" - %s\n", r.Message)
 
-	if t, ok := trailer["timestamp"]; ok {
-		log.Printf("timestamp from tailer:\n")
-		for i, v := range t {
-			log.Printf(" %d. %s\n", i, v)
-		}
-	} else {
-		log.Fatalf("timestamp expected but not exist in trailer")
-	}
+	readTimestampFromTrailer(trailer)
+
 }
 
 func serverStreamingWithMetadata(c pb.EchoClient, message string) {
@@ -84,25 +64,9 @@ func serverStreamingWithMetadata(c pb.EchoClient, message string) {
 		log.Fatalf("fail to get header from stream: %v", err)
 	}
 
-	// read timestamp from header
-	if t, ok := header["timestamp"]; ok {
-		log.Printf("timestamp from header:\n")
-		for i, v := range t {
-			log.Printf(" %d. %s\n", i, v)
-		}
-	} else {
-		log.Fatalf("timestamp expected but not exist int header")
-	}
+	readTimestampFromHeader(header)
 
-	// read location from header
-	if l, ok := header["location"]; ok {
-		log.Printf("location from header:\n")
-		for i, v := range l {
-			log.Printf(" %d. %s\n", i, v)
-		}
-	} else {
-		log.Fatalf("location expected but not exist in header")
-	}
+	readLocationFromHeader(header)
 
 	// read the response
 	var rpcStatus error
@@ -120,15 +84,7 @@ func serverStreamingWithMetadata(c pb.EchoClient, message string) {
 
 	//  read after RPC finished
 	trailer := stream.Trailer()
-	// read timestamp from trailer
-	if t, ok := trailer["timestamp"]; ok {
-		log.Printf("timestamp from tailer:\n")
-		for i, v := range t {
-			log.Printf(" %d. %s\n", i, v)
-		}
-	} else {
-		log.Fatalf("timestamp expected but not exist in trailer")
-	}
+	readTimestampFromTrailer(trailer)
 }
 
 func clientSteamingWithMetadata(c pb.EchoClient, message string) {
@@ -147,24 +103,11 @@ func clientSteamingWithMetadata(c pb.EchoClient, message string) {
 	if err != nil {
 		log.Fatalf("failed to get header from stream: %v", err)
 	}
-	// read metadata from header
-	if t, ok := header["timestamp"]; ok {
-		log.Printf("timestamp from header:\n")
-		for i, v := range t {
-			log.Printf(" %d. %s\n", i, v)
-		}
-	} else {
-		log.Fatal("timestamp expected but not exist in header")
-	}
-	// read location from header
-	if l, ok := header["location"]; ok {
-		log.Printf("location from header:\n")
-		for i, v := range l {
-			log.Printf(" %d. %s\n", i, v)
-		}
-	} else {
-		log.Fatal("location expected but not exist in header")
-	}
+
+	readTimestampFromHeader(header)
+
+	readLocationFromHeader(header)
+
 	// send requests to server by stream
 	for i := 0; i < streamingCount; i++ {
 		err := stream.Send(&pb.EchoRequest{
@@ -182,16 +125,10 @@ func clientSteamingWithMetadata(c pb.EchoClient, message string) {
 	}
 	log.Printf("response:\n")
 	log.Printf(" - %s\n\n", r.Message)
+
 	// read trailer after RPC finished
 	trailer := stream.Trailer()
-	if t, ok := trailer["timestamp"]; ok {
-		log.Printf("timestamp from trailer:\n")
-		for i, v := range t {
-			log.Printf(" %d. %s\n", i, v)
-		}
-	} else {
-		log.Fatal("timestamp expected but not exist in trailer")
-	}
+	readTimestampFromTrailer(trailer)
 }
 
 func bidirectionalWithMetadata(c pb.EchoClient, message string) {
@@ -212,24 +149,11 @@ func bidirectionalWithMetadata(c pb.EchoClient, message string) {
 		if err != nil {
 			log.Fatalf("failed to get header from stream: %v", err)
 		}
-		// read metadata from header
-		if t, ok := header["timestamp"]; ok {
-			log.Printf("timestamp from header:\n")
-			for i, v := range t {
-				log.Printf(" %d. %s\n", i, v)
-			}
-		} else {
-			log.Fatal("timestamp expected but not exist in header")
-		}
-		// read location from header
-		if l, ok := header["location"]; ok {
-			log.Printf("location from header:\n")
-			for i, v := range l {
-				log.Printf(" %d. %s\n", i, v)
-			}
-		} else {
-			log.Fatal("location expected but not exist in header")
-		}
+
+		readTimestampFromHeader(header)
+
+		readLocationFromHeader(header)
+
 		// send requests to server by stream
 		for i := 0; i < streamingCount; i++ {
 			err := stream.Send(&pb.EchoRequest{
@@ -260,14 +184,40 @@ func bidirectionalWithMetadata(c pb.EchoClient, message string) {
 
 	//  read after RPC finished
 	trailer := stream.Trailer()
-	// read timestamp from trailer
-	if t, ok := trailer["timestamp"]; ok {
-		log.Printf("timestamp from tailer:\n")
+	readTimestampFromTrailer(trailer)
+}
+
+func readTimestampFromHeader(header metadata.MD) {
+	if t, ok := header["timestamp"]; ok {
+		log.Printf("timestamp from header:\n")
 		for i, v := range t {
 			log.Printf(" %d. %s\n", i, v)
 		}
 	} else {
-		log.Fatalf("timestamp expected but not exist in trailer")
+		log.Fatal("timestamp expected but not exist in header")
+	}
+}
+
+func readLocationFromHeader(header metadata.MD) {
+	if l, ok := header["location"]; ok {
+		log.Printf("location from header:\n")
+		for i, v := range l {
+			log.Printf(" %d. %s\n", i, v)
+		}
+	} else {
+		log.Fatal("location expected but not exist in header")
+	}
+}
+
+func readTimestampFromTrailer(trailer metadata.MD) {
+	// read trailer after RPC finished
+	if t, ok := trailer["timestamp"]; ok {
+		log.Printf("timestamp from trailer:\n")
+		for i, v := range t {
+			log.Printf(" %d. %s\n", i, v)
+		}
+	} else {
+		log.Fatal("timestamp expected but not exist in trailer")
 	}
 }
 
