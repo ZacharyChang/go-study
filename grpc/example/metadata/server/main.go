@@ -39,18 +39,10 @@ func (s *server) UnaryEcho(ctx context.Context, in *pb.EchoRequest) (*pb.EchoRes
 	if !ok {
 		return nil, status.Errorf(codes.DataLoss, "UnaryEcho: failed to get metadata")
 	}
-	if t, ok := md["timestamp"]; ok {
-		log.Printf("timestamp from metadata:\n")
-		for i, v := range t {
-			log.Printf(" %d, %s\n", i, v)
-		}
-	}
 
-	header := metadata.New(map[string]string{
-		"location":  "MTV",
-		"timestamp": time.Now().Format(timestampFormat),
-	})
-	grpc.SendHeader(ctx, header)
+	readTimestampFromHeader(md)
+
+	grpc.SendHeader(ctx, initHeader())
 
 	log.Printf("request received: %v\n", in)
 
@@ -70,18 +62,10 @@ func (s *server) ServerStreamingEcho(in *pb.EchoRequest, stream pb.Echo_ServerSt
 	if !ok {
 		return status.Errorf(codes.DataLoss, "ServeStreamingEcho: failed to get metadata")
 	}
-	if t, ok := md["timestamp"]; ok {
-		log.Printf("timestamp from metadata:\n")
-		for i, v := range t {
-			fmt.Printf(" %d, %s\n", i, v)
-		}
-	}
 
-	header := metadata.New(map[string]string{
-		"location":  "MTV",
-		"timestamp": time.Now().Format(timestampFormat),
-	})
-	stream.SendHeader(header)
+	readTimestampFromHeader(md)
+
+	stream.SendHeader(initHeader())
 
 	log.Printf("request received: %v\n", in)
 
@@ -109,18 +93,10 @@ func (s *server) ClientStreamingEcho(stream pb.Echo_ClientStreamingEchoServer) e
 	if !ok {
 		return status.Errorf(codes.DataLoss, "ClientStreamingEcho: failed to get metadata")
 	}
-	if t, ok := md["timestamp"]; ok {
-		log.Printf("timestamp from metadata:\n")
-		for i, v := range t {
-			log.Printf(" %d, %s\n", i, v)
-		}
-	}
 
-	header := metadata.New(map[string]string{
-		"location":  "MTV",
-		"timestamp": time.Now().Format(timestampFormat),
-	})
-	stream.SendHeader(header)
+	readTimestampFromHeader(md)
+
+	stream.SendHeader(initHeader())
 
 	var message string
 	for {
@@ -152,18 +128,9 @@ func (s *server) BidirectionalStreamingEcho(stream pb.Echo_BidirectionalStreamin
 		return status.Errorf(codes.DataLoss, "BidirectionalStreamingEcho: failed to get metadata")
 	}
 
-	if t, ok := md["timestamp"]; ok {
-		log.Printf("timestamp from metadata:\n")
-		for i, v := range t {
-			log.Printf(" %d, %s\n", i, v)
-		}
-	}
+	readTimestampFromHeader(md)
 
-	header := metadata.New(map[string]string{
-		"location":  "MTV",
-		"timestamp": time.Now().Format(timestampFormat),
-	})
-	stream.SendHeader(header)
+	stream.SendHeader(initHeader())
 
 	for {
 		in, err := stream.Recv()
@@ -182,6 +149,25 @@ func (s *server) BidirectionalStreamingEcho(stream pb.Echo_BidirectionalStreamin
 		}
 		time.Sleep(2 * time.Second)
 	}
+}
+
+func readTimestampFromHeader(header metadata.MD) {
+	if t, ok := header["timestamp"]; ok {
+		log.Printf("timestamp from header:\n")
+		for i, v := range t {
+			log.Printf(" %d. %s\n", i, v)
+		}
+	} else {
+		log.Fatal("timestamp expected but not exist in header")
+	}
+}
+
+func initHeader() metadata.MD {
+	header := metadata.New(map[string]string{
+		"location":  "MTV",
+		"timestamp": time.Now().Format(timestampFormat),
+	})
+	return header
 }
 
 func main() {

@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
-	"github.com/zacharychang/go-study/grpc/example/hello/pb"
-	"google.golang.org/grpc"
 	"log"
 	"os"
 	"time"
+
+	"github.com/zacharychang/go-study/grpc/example/hello/pb"
+	"google.golang.org/grpc"
 )
 
 var (
